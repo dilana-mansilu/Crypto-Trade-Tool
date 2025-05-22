@@ -1,0 +1,32 @@
+
+strategy(title="Chainix Bandora", overlay=true, commission_value=0.1, slippage=3)
+
+// Inputs
+atrPeriod = input.int(10, "ATR Length", minval=1)
+factor = input.float(3.0, "Factor", minval=0.01, step=0.01)
+
+// Date filter
+startDate = input.time(timestamp("2018-01-01 00:00"), "Start Date")
+endDate = input.time(timestamp("2069-12-31 23:59"), "End Date")
+
+// Supertrend Calculation
+[supertrend, direction] = ta.supertrend(factor, atrPeriod)
+
+// Plotting Supertrend
+upTrend = plot(direction > 0 ? supertrend : na, title="Up Trend", color=color.green, style=plot.style_line)
+downTrend = plot(direction < 0 ? supertrend : na, title="Down Trend", color=color.red, style=plot.style_line)
+
+// Filling Trend Background
+fill(upTrend, downTrend, color.new(color.green, 90), fillgaps=false)
+fill(downTrend, upTrend, color.new(color.red, 90), fillgaps=false)
+
+// Strategy Logic
+isInDateRange = (time >= startDate and time <= endDate)
+longCondition = ta.crossover(direction, 0)
+exitCondition = ta.crossunder(direction, 0)
+
+if (longCondition and isInDateRange)
+    strategy.entry("Long", strategy.long)
+
+if (exitCondition and isInDateRange)
+    strategy.close("Long")
